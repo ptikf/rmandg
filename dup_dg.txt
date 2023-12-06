@@ -1,0 +1,52 @@
+rman work:
+1 - backup script
+
+2 - restore DB
+
+2 - duplicate new name
+
+3 - backup dup 
+
+4 - restore dup PITR
+
+5 - restore table dans DUP
+
+6 - restore TS
+
+source: 
+/opt/oracle/oradata/ORCLCDB
+
+cible: 
+
+/u01
+/u02
+/u03
+/u04 
+
+ set db_file_name_convert = '/u02/app/oracle/oradata/${FROM_SID}', '/u02/app/oracle/oradata/${TO_SID}'
+ set log_file_name_convert = '/u04/app/oracle/redo/${FROM_SID}', '/u04/app/oracle/redo/${TO_SID}'
+ set control_files='/u04/app/oracle/redo/$TO_SID/controlfile/control_${TO_SID}_01.ctl'
+ set db_create_file_dest='/u02/app/oracle/oradata/${TO_SID}'
+ set db_create_online_log_dest_1='/u04/app/oracle/redo/${TO_SID}'
+ set db_recovery_file_dest='/u03/app/oracle/fast_recovery_area/'
+ 
+ run
+{
+ALLOCATE AUXILIARY CHANNEL CH1 DEVICE TYPE DISK;
+ALLOCATE AUXILIARY CHANNEL CH2 DEVICE TYPE DISK;
+DUPLICATE DATABASE TO TESTREST
+SPFILE
+SET CONTROL_FILES '/u04/app/oracle/oradata/TESTREST/control01.ctl','/u07/app/oracle/oradata/TESTREST/fast_recovery_area/TESTREST/control03.ctl','/u05/app/oracle/oradata/TESTREST/control02.ctl'
+SET DB_FILE_NAME_CONVERT 'LOGIS','TESTREST'
+SET LOG_FILE_NAME_CONVERT 'LOGIS','TESTREST'
+SET DB_RECOVERY_FILE_DEST='/u07/app/oracle/oradata/TESTREST/fast_recovery_area/TESTREST'
+SET LOG_ARCHIVE_DEST_1='LOCATION=/u07/app/oracle/oradata/TESTREST/archivelogs'
+SET AUDIT_FILE_DEST='/u01/app/oracle/admin/TESTREST/adump'
+SET local_listener='(ADDRESS = (PROTOCOL = TCP)(HOST = TROL8BDDRESTOR01.chtroyes.fr)(PORT = 1521))'
+SET db_recovery_file_dest_size = '4096'
+SET SGA_TARGET='4096m'
+SET SGA_MAX_SIZE='4096m'
+BACKUP LOCATION '/u08/app/oracle/oradata/BACKUP/LOGIS/rman'
+UNTIL TIME "to_date('2022-03-28-18-00-00','yyyy-mm-dd-hh24-mi-ss')"
+NOFILENAMECHECK;
+}
